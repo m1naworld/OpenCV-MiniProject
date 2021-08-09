@@ -3,7 +3,7 @@
 ## Car License plate identification program
 <br/>
 
-### Process
+### - Process
 ### 1. Image preprocessing
 <img width="454" alt="닫힘 여산 및 수직 에지 검출" src="https://user-images.githubusercontent.com/85235063/128740947-6a6aa2cc-7abd-4179-ab63-5c3118f78dfc.png">
 
