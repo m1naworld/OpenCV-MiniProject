@@ -1,5 +1,5 @@
 ## OpenCV-MiniProject
-### - Car License plate identification program
+### - Car License plate recognition program
 
 <br/>
 <br/>
