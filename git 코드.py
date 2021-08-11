@@ -10,8 +10,7 @@ def preprocessing(car_no):
         return None, None
 
     # 명암도 영상 변환, 블러링, 수직 에지 검출
-    gray = cv2.cvtColor(
-        image, cv2.COLOR_BGR2GRAY)  # 명암도 영상 변환: BGR -> 단일채널(그레이스케일 = 명암도)
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)  # 명암도 영상 변환: BGR -> 단일채널(그레이스케일 = 명암도)
     gray = cv2.blur(gray, (5, 5))  # 5x5 평균 블러링 필터 적용
     # Sobel 에지 검출 -> 1차 미분 연산자 sobel(src, ddepth, dx, dy, ksize)
     # ddeph:결과 이미지 데이터 타입 >> 채널 범위가 달라짐
@@ -26,8 +25,7 @@ def preprocessing(car_no):
     th_img = cv2.threshold(gray, 120, 255, cv2.THRESH_BINARY)[1]  # 어레이만 가져옴
     # 모폴로지 닫힘 연산 (열림연산 : 배경잡음제거에 용이 / 닫힘연산: 객체 내부 잡음 제거에 용이)
     kernel = np.ones((5, 17), np.uint8)  # 번호판 모양과 비슷한 가로로 긴 닫힘 연산 마스크
-    morph = cv2.morphologyEx(th_img, cv2.MORPH_CLOSE, kernel,
-                             iterations=3)  # 닫힘 연산 3번 수행
+    morph = cv2.morphologyEx(th_img, cv2.MORPH_CLOSE, kernel,iterations=3)  # 닫힘 연산 3번 수행
 
     # 이미지 전처리 확인
     # cv2.imshow("전처리 이미지", morph)
@@ -50,14 +48,12 @@ def verify_aspect_size(size):
 
 # 번호판 후보 생성
 def find_candidates(image):
-    results = cv2.findContours(image, cv2.RETR_EXTERNAL,
-                               cv2.CHAIN_APPROX_SIMPLE)  # 이진화 이미지에서 윤곽선 검색
+    results = cv2.findContours(image, cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)  # 이진화 이미지에서 윤곽선 검색
 
     contours = results[0] if int(cv2.__version__[0]) >= 4 else results[1]
 
     rects = [cv2.minAreaRect(c) for c in contours]  # 회전 사각형 반환
-    candidates = [(tuple(map(int, center)), tuple(map(int, size)), angle)
-                  for center, size, angle in rects if verify_aspect_size(size)]
+    candidates = [(tuple(map(int, center)), tuple(map(int, size)), angle) for center, size, angle in rects if verify_aspect_size(size)]
 
     return candidates
 
@@ -76,10 +72,8 @@ def color_candidate_img(image, candi_center):
     pts = pts + candi_center  # 중심좌표로 평행이동
     for x, y in pts:  # 임의 좌표 순회
         if 0 <= x < w and 0 <= y < h:  # 후보 영역 내부 이면
-            _, _, fill, _ = cv2.floodFill(image, fill, (x, y), 255, dif1, dif2,
-                                          flags)  # 특정영역을 고립시키거나 구분할 때 사용되는 기능
-            return cv2.threshold(fill, 120, 255,
-                                 cv2.THRESH_BINARY)[1]  # 이진화 이미지로 반환
+            _, _, fill, _ = cv2.floodFill(image, fill, (x, y), 255, dif1, dif2,flags)  # 특정영역을 고립시키거나 구분할 때 사용되는 기능
+            return cv2.threshold(fill, 120, 255,cv2.THRESH_BINARY)[1]  # 이진화 이미지로 반환
 
 
 # 후보영상 각도 보정 함수
@@ -106,15 +100,12 @@ while True:  # 번호판 후보 생성 코드
     candidates = find_candidates(morph)  # 번호판 후보 영역 검색
 
     fills = [
-        color_candidate_img(image, center) for center, _, _ in candidates
-    ]  # 후보 영역 재생성
+        color_candidate_img(image, center) for center, _, _ in candidates]  # 후보 영역 재생성
     new_candis = [find_candidates(fill) for fill in fills]  # 재생성 영역 검사
     new_candis = [cand[0] for cand in new_candis if cand]  # 재후보 있으면 저장
-    candidate_imgs = [rotate_plate(image, cand)
-                      for cand in new_candis]  # 후보 영역 영상 # 리스트
+    candidate_imgs = [rotate_plate(image, cand) for cand in new_candis]  # 후보 영역 영상 # 리스트
 
-    svm = cv2.ml.SVM_load(
-        "SVMTrain.xml")  # 학습된 데이터 적재
+    svm = cv2.ml.SVM_load("SVMTrain.xml")  # 학습된 데이터 적재
 
     if len(candidate_imgs) != 0:
         rows = np.reshape(candidate_imgs, (len(candidate_imgs), -1))  # 1행으로 변환
@@ -130,8 +121,7 @@ while True:  # 번호판 후보 생성 코드
 # 후보 영역 확인을 위한 윈도우 화면
 # 번호판이 후보영역으로 생성되었지만 번호판으로 판별되지 않았을시 확인용
 for i, img in enumerate(candidate_imgs):
-    cv2.polylines(image, [np.int32(cv2.boxPoints(new_candis[i]))], True,
-                  (0, 255, 255), 2)
+    cv2.polylines(image, [np.int32(cv2.boxPoints(new_candis[i]))], True, (0, 255, 255), 2)
     cv2.imshow("candidate_img - " + str(i), img)
 
 # 번호판 검출 성공시 윈도우 화면
@@ -140,10 +130,8 @@ for i, idx in enumerate(correct):  # enumerate() 인덱스와 값을 동시에 �
     cv2.resizeWindow("plate image_" + str(i), (250, 28))  # 윈도우 크기 조절
 
 for i, candi in enumerate(new_candis):
-    color = (0, 255, 0) if i in correct else (
-        0, 0, 255)  # 후보영역 색 지정 (번호판 검출 성공시: 초록색, 실패시 : 빨간색)
-    cv2.polylines(image, [np.int32(cv2.boxPoints(candi))], True, color,
-                  2)  # 후보 영역 표시
+    color = (0, 255, 0) if i in correct else (0, 0, 255)  # 후보영역 색 지정 (번호판 검출 성공시: 초록색, 실패시 : 빨간색)
+    cv2.polylines(image, [np.int32(cv2.boxPoints(candi))], True, color, 2)  # 후보 영역 표시
 
 print("번호판 검출완료") if len(correct) > 0 else print("번호판 미검출")
 
